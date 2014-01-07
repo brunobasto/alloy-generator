@@ -92,6 +92,7 @@ public class TagBuilder extends BaseBuilder {
 		_tplTag = _templatesDir + "tag.ftl";
 		_tplTagBase = _templatesDir + "tag_base.ftl";
 		_tplTld = _templatesDir + "tld.ftl";
+		_tplComponentJava = _templatesDir + "component_java.ftl";
 
 		build();
 	}
@@ -277,6 +278,125 @@ public class TagBuilder extends BaseBuilder {
 		return targetDoc;
 	}
 
+	protected Document mergeXMLAttributes(Document doc1, Document doc2) {
+		Element doc1Root = doc1.getRootElement();
+
+		Element docRoot = doc1Root.createCopy();
+		docRoot.clearContent();
+
+		DocumentFactory factory = _saxReader.getDocumentFactory();
+
+		Document doc = factory.createDocument();
+		doc.setRootElement(docRoot);
+
+		List<Element> doc1Components = doc1Root.elements(_COMPONENT);
+
+		for (Element doc1Component : doc1Components) {
+			String name = doc1Component.attributeValue("name");
+
+			Element doc2Component = getComponentNode(doc2, name);
+
+			if (doc2Component != null) {
+				Element doc2AttributesNode = doc2Component.element(_ATTRIBUTES);
+
+				if (doc2AttributesNode != null) {
+					List<Element> doc2Attributes = doc2AttributesNode.elements(
+						_ATTRIBUTE);
+
+					Element doc1AttributesNode = doc1Component.element(
+						_ATTRIBUTES);
+
+					for (Element doc2Attribute : doc2Attributes) {
+						Element doc1Attribute = getElementByName(
+							doc1AttributesNode.elements("attribute"),
+							doc2Attribute.elementText("name"));
+
+						if (doc1Attribute == null) {
+							doc1AttributesNode.add(doc2Attribute.createCopy());
+						}
+					}
+				}
+
+				Element doc2EventsNode = doc2Component.element(_EVENTS);
+
+				if (doc2EventsNode != null) {
+					List<Element> doc2Events = doc2EventsNode.elements(_EVENT);
+
+					Element doc1EventsNode = doc1Component.element(_EVENTS);
+
+					for (Element doc2Event : doc2Events) {
+						Element doc1Event = getElementByName(
+							doc1EventsNode.elements("event"),
+							doc2Event.elementText("name"));
+
+						if (doc1Event == null) {
+							doc1EventsNode.add(doc2Event.createCopy());
+						}
+					}
+				}
+			}
+
+			doc.getRootElement().add(doc1Component.createCopy());
+		}
+
+		return doc;
+	}
+
+	protected String processTemplate(String name, Map<String, Object> context)
+		throws Exception {
+
+		return StringUtil.replace(
+			FreeMarkerUtil.process(name, context), "\r", StringPool.EMPTY);
+	}
+
+	protected void writeFile(File file, String content) {
+		writeFile(file, content, true);
+	}
+
+	protected void writeFile(File file, String content, boolean overwrite) {
+		try {
+			file.getParentFile().mkdirs();
+
+			if (overwrite || !file.exists()) {
+				String oldContent = StringPool.EMPTY;
+
+				if (file.exists()) {
+					oldContent = FileUtil.readString(file);
+				}
+
+				if (!file.exists() || !content.equals(oldContent)) {
+					System.out.println("Writing " + file);
+
+					FileUtil.writeString(file, content);
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void _create() throws Exception {
+		List<Component> components = getAllComponents();
+
+		for (Component component : components) {
+			Map<String, Object> context = getTemplateContext(component);
+
+			_createBaseTag(component, context);
+
+			if (component.getWriteJSP()) {
+				_createPageJSP(component, context);
+			}
+			
+			_createComponentJAVA(component, context);
+
+			_createTag(component, context);
+		}
+
+		_createCommonInitJSP();
+		_createTld();
+	}
+
 	private void _createBaseTag(
 			Component component, Map<String, Object> context)
 		throws Exception {
@@ -397,6 +517,34 @@ public class TagBuilder extends BaseBuilder {
 			writeFile(tldFile, content, true);
 		}
 	}
+	
+	protected String getKyleJavaOutputDir(Component component) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("/Users/kylestiemann/Projects/liferay.com/alloy-generator/build");
+		sb.append(StringPool.SLASH);
+		sb.append("faces/components/com/liferay/faces/alloy/component/");
+
+		return sb.toString();
+	}
+	
+	private void _createComponentJAVA(
+			Component component, Map<String, Object> context)
+		throws Exception {
+
+		//String pathName = component.getName() + "/";
+		String path = getKyleJavaOutputDir(component);//.concat(pathName);
+
+		String contentComponentJava = processTemplate(_tplComponentJava, context);
+
+		File componentFile = new File(path.concat(component.getName().concat(".java")));
+
+		System.err.println(componentFile.getPath());
+		
+		writeFile(componentFile, contentComponentJava);
+	}
+	
+	private String _tplComponentJava;
 
 	private static final String _BASE = "base";
 
