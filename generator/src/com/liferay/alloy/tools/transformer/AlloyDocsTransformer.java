@@ -196,10 +196,11 @@ public class AlloyDocsTransformer {
 			componentNode.addAttribute("package", component.getPackage());
 			componentNode.addAttribute(
 				"bodyContent", String.valueOf(component.isBodyContent()));
-
 			componentNode.addAttribute(
 				"alloyComponent", String.valueOf(component.isAlloyComponent()));
 
+			Element descriptionNode = componentNode.addElement("description");
+			descriptionNode.addCDATA(component.getDescription());
 			Element attributesNode = componentNode.addElement("attributes");
 			Element eventsNode = componentNode.addElement("events");
 
@@ -208,17 +209,20 @@ public class AlloyDocsTransformer {
 
 				Element defaultValueNode = attributeNode.addElement(
 					"defaultValue");
-				Element descriptionNode = attributeNode.addElement(
+				Element attributeDescriptionNode = attributeNode.addElement(
 					"description");
 				Element inputTypeNode = attributeNode.addElement("inputType");
+				Element rawJavaScriptTypeNode = attributeNode.addElement(
+					"rawJavaScriptType");
 				Element javaScriptTypeNode = attributeNode.addElement(
 					"javaScriptType");
 				Element nameNode = attributeNode.addElement("name");
 				Element outputTypeNode = attributeNode.addElement("outputType");
 
 				defaultValueNode.setText(attribute.getDefaultValue());
-				descriptionNode.addCDATA(_getAttributeDescription(attribute));
+				attributeDescriptionNode.addCDATA(_getAttributeDescription(attribute));
 				inputTypeNode.setText(attribute.getInputType());
+				rawJavaScriptTypeNode.setText(attribute.getRawJavaScriptType());
 				javaScriptTypeNode.setText(attribute.getJavaScriptType());
 				nameNode.setText(attribute.getName());
 				outputTypeNode.setText(attribute.getOutputType());
@@ -228,11 +232,11 @@ public class AlloyDocsTransformer {
 				Element eventNode = eventsNode.addElement("event");
 				Element nameNode = eventNode.addElement("name");
 				Element typeNode = eventNode.addElement("type");
-				Element descriptionNode = eventNode.addElement("description");
+				Element elementDescriptionNode = eventNode.addElement("description");
 
 				nameNode.setText(event.getName());
 				typeNode.setText(event.getInputType());
-				descriptionNode.addCDATA(_getAttributeDescription(event));
+				elementDescriptionNode.addCDATA(_getAttributeDescription(event));
 			}
 		}
 
@@ -442,7 +446,7 @@ public class AlloyDocsTransformer {
 
 	private static final String _DEFAULT_ATTRIBUTE_NAMESPACE = "alloy";
 
-	private static final String _DEFAULT_JAVASCRIPT_TYPE = "String";
+	private static final String _DEFAULT_JAVASCRIPT_TYPE = "Object";
 
 	private static final String _DEFAULT_TAGLIB_SHORT_NAME = "alloy";
 

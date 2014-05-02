@@ -14,12 +14,15 @@
 
 package com.liferay.alloy.tools.model;
 
+import com.liferay.alloy.util.StringUtil;
+
 public class Event extends Attribute {
 
 	public Event(Attribute attribute) {
 		setComponent(attribute.getComponent());
 		setDefaultValue(attribute.getDefaultValue());
 		setDescription(attribute.getDescription());
+		setGenerateJava(attribute.isGenerateJava());
 		setGettable(attribute.isGettable());
 		setInputType(attribute.getInputType());
 		setJavaScriptType(attribute.getJavaScriptType());
@@ -31,16 +34,45 @@ public class Event extends Attribute {
 
 	public Event(Attribute attribute, boolean isAfter) {
 		this(attribute);
-
 		setAfter(isAfter);
+
+		setUnprefixedName(getSafeName());
+		String capitalizedName = StringUtil.capitalize(getSafeName());
+
+		if (isAfter) {
+			setName(_AFTER + capitalizedName);
+		} else {
+			setName(_ON + capitalizedName);
+		}
+	}
+
+	public boolean createConstant() {
+		return _isOn || !(_isOn || _isAfter);
 	}
 
 	public boolean isAfter() {
 		return _isAfter;
 	}
 
+	public String getConstantUnprefixedName() {
+		return StringUtil.toConstantName(_unprefixedName);
+	}
+
 	public boolean isOn() {
 		return _isOn;
+	}
+
+	public String getUnprefixedName() {
+		return _unprefixedName;
+	}
+
+	public void setUnprefixedName(String _unprefixedName) {
+		this._unprefixedName = _unprefixedName;
+	}
+
+	@Override
+	public String getJavaWrapperType() {
+		return "String";
 	}
 
 	public void setAfter(boolean after) {
@@ -53,7 +85,10 @@ public class Event extends Attribute {
 		_isOn = on;
 	}
 
+	private static final String _AFTER = "after";
+	private static final String _ON = "on";
+
 	private boolean _isAfter = false;
 	private boolean _isOn = false;
-
+	private String _unprefixedName;
 }
