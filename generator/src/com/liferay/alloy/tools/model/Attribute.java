@@ -19,11 +19,42 @@ import com.liferay.alloy.util.StringUtil;
 import com.liferay.alloy.util.TypeUtil;
 
 import java.util.List;
+import jodd.typeconverter.Convert;
 
 import jodd.util.StringPool;
 
 import org.apache.commons.lang.StringUtils;
+import org.dom4j.Element;
+
 public class Attribute extends BaseModel {
+
+	public void initialize(Element attributeElement, Component component) {
+
+		setComponent(component);
+		String description = attributeElement.elementText("description");
+		setDescription(description);
+		String name = attributeElement.elementText("name");
+		setName(name);
+		_defaultValue = attributeElement.elementText("defaultValue");
+		String type = Convert.toString(
+			attributeElement.elementText("type"), DEFAULT_TYPE);
+		_inputType = Convert.toString(
+			attributeElement.elementText("inputType"), type);
+		_javaScriptType = Convert.toString(
+			attributeElement.elementText("javaScriptType"), type);
+		_outputType = Convert.toString(
+			attributeElement.elementText("outputType"), type);
+		boolean generateJava = Convert.toBoolean(
+			attributeElement.elementText("generateJava"), true);
+		setGenerateJava(generateJava);
+
+		_gettable = Convert.toBoolean(
+			attributeElement.elementText("gettable"), true);
+		_required = Convert.toBoolean(
+			attributeElement.elementText("required"), false);
+		_settable = Convert.toBoolean(
+			attributeElement.elementText("settable"), true);
+	}
 
 	public String getCapitalizedName() {
 		return StringUtils.capitalize(getSafeName());
@@ -45,7 +76,7 @@ public class Attribute extends BaseModel {
 
 		String getterMethodPrefix = "get";
 
-		if (getJSFInputType().equals("Boolean")) {
+		if (getJavaWrapperType().equalsIgnoreCase("Boolean")) {
 			getterMethodPrefix = "is";
 		}
 
@@ -81,22 +112,11 @@ public class Attribute extends BaseModel {
 		return TypeUtil.getJavaScriptType(_javaScriptType);
 	}
 
-	public String getJSFInputType() {
-		String inputJavaType = TypeUtil.getInputJavaType(_inputType, true);
+	public String getJavaWrapperType() {
+		String javaWrapperType = getJavaScriptType();
+		javaWrapperType = TypeUtil.getInputJavaType(javaWrapperType, true);
 
-		if (TypeUtil.isPrimitiveType(inputJavaType)) {
-			if (inputJavaType.equals("int")) {
-				inputJavaType = "Integer";
-			}
-			else {
-				inputJavaType = StringUtil.capitalize(inputJavaType);
-			}
-		}
-		else if (inputJavaType.startsWith("java.lang.")) {
-			inputJavaType = inputJavaType.substring("java.lang.".length());
-		}
-
-		return inputJavaType;
+		return TypeUtil.getJavaWrapperType(javaWrapperType);
 	}
 
 	public String getOutputType() {
@@ -206,6 +226,8 @@ public class Attribute extends BaseModel {
 	protected String getInferredNamePrefix(String name) {
 		return name.substring(0, 2);
 	}
+
+	protected static final String DEFAULT_TYPE = "java.lang.Object";
 
 	private Component _component;
 	private String _defaultValue;

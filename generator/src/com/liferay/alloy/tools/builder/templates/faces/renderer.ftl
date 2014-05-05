@@ -1,22 +1,20 @@
-<#include "../common/init.ftl">
-<#include "../common/copyright.ftl">
+<#include "../base/init.ftl">
+<#include "../base/copyright.ftl">
 
 package ${packagePath}.${component.getUncamelizedName(BLANK)};
 
-import javax.faces.component.UIPanel;
+<#if !component.isAlloyComponent()>
+import ${component.getRendererBaseClass()};
+</#if>
+import javax.faces.application.ResourceDependency;
 import javax.faces.render.FacesRenderer;
 
-<#compress>
-<#assign componentInterface = "${component.getInterface()!}">
-</#compress>
-
 /**
-<#list component.getAuthors() as author>
- * @author ${author}
+<#list component.getAuthors()?sort as author>
+ * @author  ${author}
 </#list>
  */
-@FacesRenderer(
-	componentFamily = UIPanel.COMPONENT_FAMILY, rendererType = "${packagePath}.${component.getUncamelizedName(BLANK)}.${component.getCamelizedName()}Renderer"
-)
-public class ${component.getCamelizedName()}Renderer extends ${component.getCamelizedName()}RendererBase${(componentInterface?? && (componentInterface != BLANK))?string(' implements ' + componentInterface, BLANK)} {
+@FacesRenderer(componentFamily = ${component.getCamelizedName()}.COMPONENT_FAMILY, rendererType = ${component.getCamelizedName()}.RENDERER_TYPE)
+@ResourceDependency(library = "liferay-faces-alloy", name = "liferay.js")
+public class ${component.getCamelizedName()}${RENDERER_CLASS_SUFFIX} extends ${component.getUnqualifiedRendererBaseClass()} {
 }
