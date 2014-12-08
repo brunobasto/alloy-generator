@@ -33,27 +33,19 @@ public class FacesComponent extends Component {
 		return _handlerClass;
 	}
 
-	public String getRendererBaseClass() {
-		String rendererBaseClass = getRendererParentClass();
+	public String getRendererParentClass() {
 
-		if (isYui()) {
-			rendererBaseClass = _getDefaultAlloyRendererBaseClass();
+		if (_rendererParentClass.contains("<")) {
+			return _rendererParentClass.substring(0, _rendererParentClass.indexOf("<"));
+		}
+		else {
+			return _rendererParentClass;
 		}
 
-		return rendererBaseClass;
-	}
-
-	public String getRendererParentClass() {
-		return _rendererParentClass;
-	}
-
-	public String getUnqualifiedRendererBaseClass() {
-		return getRendererBaseClass().substring(
-			getRendererBaseClass().lastIndexOf(StringPool.DOT) + 1);
 	}
 
 	public String getUnqualifiedRendererParentClass() {
-		return getRendererParentClass().substring(
+		return _rendererParentClass.substring(
 			getRendererParentClass().lastIndexOf(StringPool.DOT) + 1);
 	}
 
@@ -175,17 +167,6 @@ public class FacesComponent extends Component {
 		}
 
 		return attributes;
-	}
-
-	private String _getDefaultAlloyRendererBaseClass() {
-		StringBuilder sb = new StringBuilder(4);
-
-		sb.append(getPackage());
-		sb.append(StringPool.DOT);
-		sb.append(getCamelizedName());
-		sb.append("RendererBase");
-
-		return sb.toString();
 	}
 
 	private static final String _COMPONENT_DEFAULT_PARENT_CLASS =
